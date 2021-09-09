@@ -9,7 +9,7 @@ import torch.nn as nn
 
 def main(cfg, model_cfg):    
     cfg = configuration.params.from_json(cfg)
-    model_cfg = configuration.params.from_json(model_cfg)
+    #model_cfg = configuration.model.from_json(model_cfg)
     set_seeds(cfg.seed)
 
     # Load Data & Create Criterion
@@ -25,3 +25,4 @@ def main(cfg, model_cfg):
 
 if __name__ == '__main__':
     main('config/uda.json', 'config/bert_base.json')
+    print('completly done')

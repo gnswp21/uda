@@ -1,15 +1,15 @@
-from numpy import dtype
-import pandas as pd
-import itertools
 
+import pandas as pd
+
+
+import torch
 from torch.utils.data import Dataset, DataLoader
 import ast
-import torch
 
 class IMDB(Dataset):
     labels = ('0', '1')
     def __init__(self, file, need_prepro, max_len, mode, d_type):
-        super().__init__(self)
+        super().__init__()
 
         if need_prepro:
             raise NotImplemented
@@ -19,14 +19,14 @@ class IMDB(Dataset):
 
             if d_type == 'sup':
                 columns = ['input_ids', 'input_mask', 'input_type_ids', 'label_ids']
-                self.tensors = [torch.Tensor(data[c].apply(lambda x: ast.literal_eval(x)), dtype=torch.long) \
+                self.tensors = [torch.tensor(data[c].apply(lambda x: ast.literal_eval(x)), dtype=torch.long) \
                                     for c in columns[:-1]]
-                self.tensors.append(torch.Tensor(data[columns[-1]], dtype=torch.long))
+                self.tensors.append(torch.tensor(data[columns[-1]], dtype=torch.long))
 
             elif d_type =='unsup':
-                columns = ['ori_input_ids', 'ori_input_tpye_ids', 'ori_input_mask',
+                columns = ['ori_input_ids', 'ori_input_type_ids', 'ori_input_mask',
                              'aug_input_ids', 'aug_input_type_ids', 'aug_input_mask']
-                self.tensors = [torch.Tensor(data[c].apply(lambda x: ast.literal_eval(x)), dtype=torch.long) \
+                self.tensors = [torch.tensor(data[c].apply(lambda x: ast.literal_eval(x)), dtype=torch.long) \
                                     for c in columns]
             else:
                 raise "d_type error"
@@ -45,7 +45,7 @@ class load_data:
         self.cfg = cfg
 
         self.dataset = IMDB
-        if cfg.need_prepos:
+        if cfg.need_prepro:
             raise NotImplemented
 
         if cfg.mode == 'train':
@@ -74,7 +74,7 @@ class load_data:
         return sup_data_iter
 
     def unsup_data_iter(self):
-        unsup_dataset = self.dataset(self.unsup_data_dir, self.cfg.need_prepo, self.cfg.max_seq_length, self.cfg.mode, 'unsup')
+        unsup_dataset = self.dataset(self.unsup_data_dir, self.cfg.need_prepro, self.cfg.max_seq_length, self.cfg.mode, 'unsup')
         unsup_data_iter = DataLoader(unsup_dataset, batch_size=self.unsup_batch_size, shuffle=self.shuffle)
         
         return unsup_data_iter
