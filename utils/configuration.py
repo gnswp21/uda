@@ -40,4 +40,4 @@ class params(NamedTuple):
 
     @classmethod
     def from_json(cls, file):
-        return cls(**json.load(open(file, encoding='utf-8', mode='r')))
+        return cls(**json.load(open(file,'r')))

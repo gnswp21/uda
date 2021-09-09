@@ -1,15 +1,19 @@
 {
     "seed": 42,
     "lr": 2e-5,    
+
     "mode": "train_eval",
     "uda_mode": true,    
-    "max_seq_length": 128,
+
+    "max_seq_length": 128,    
     "train_batch_size": 8,
     "eval_batch_size": 16,
-    "unsup_ratio": 3,      
+    "unsup_ratio": 3,     
+
     "need_prepro": false,
+
     "sup_data_dir": "data/imdb_sup_train.txt",
     "unsup_data_dir": "data/imdb_unsup_train.txt",
-    "need_prepro" : false
+    "eval_data_dir": "data/imdb_sup_test.txt"
 
 }
