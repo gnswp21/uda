@@ -2,14 +2,19 @@ from utils import configuration
 from utils.utils import set_seeds
 
 from load_data import load_data
+
 import torch
 import torch.nn as nn
 
+from transformers import (
+    AutoConfig,
+    AutoModelForSequenceClassification,
+)
 
 
 def main(cfg, model_cfg):    
     cfg = configuration.params.from_json(cfg)
-    #model_cfg = configuration.model.from_json(model_cfg)
+    model_cfg = configuration.model.from_json(model_cfg)
     set_seeds(cfg.seed)
 
     # Load Data & Create Criterion
@@ -21,8 +26,25 @@ def main(cfg, model_cfg):
     else:
         raise NotImplemented
     
+    
+    # Load model
+    config = AutoConfig.from_pretrained(
+        model_cfg.model_name_or_path,
+        num_labels=num_labels
+    )
+
+    model = AutoModelForSequenceClassification.from_config(config=config)
+    for i, data in enumerate(data_iter[0]):
+        if i == 3:
+            break
+
+    
+
+    # train train.py 
+       
+    # eval
+    
 
 
 if __name__ == '__main__':
     main('config/uda.json', 'config/bert_base.json')
-    print('completly done')

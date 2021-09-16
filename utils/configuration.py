@@ -41,3 +41,15 @@ class params(NamedTuple):
     @classmethod
     def from_json(cls, file):
         return cls(**json.load(open(file,'r')))
+
+
+class model(NamedTuple):
+    # model_name_or_path  : model path
+    # num_labels : number of labels
+    
+    model_name_or_path: str  = None,
+    num_labels: int = 0
+    
+    @classmethod
+    def from_json(cls, file):
+        return cls(**json.load(open(file, 'r')))
