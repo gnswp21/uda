@@ -1,10 +1,11 @@
 from utils import configuration
 from utils.utils import set_seeds
-
+import trainer
 from load_data import load_data
 
-import torch
+import torch.optim as optim
 import torch.nn as nn
+import torch
 
 from transformers import (
     AutoConfig,
@@ -30,19 +31,25 @@ def main(cfg, model_cfg):
     # Load model
     config = AutoConfig.from_pretrained(
         model_cfg.model_name_or_path,
-        num_labels=num_labels
+        num_labels=model_cfg.num_labels
     )
 
     model = AutoModelForSequenceClassification.from_config(config=config)
-    for i, data in enumerate(data_iter[0]):
-        if i == 3:
-            break
+      
+    ## train train.py 
+    #trainer = trainer.trainer(model, cfg, model_cfg)
 
+    optimizer = optim.Adam(model.parameters(), lr=cfg.lr)
+    criterion = nn.CrossEntropyLoss()
+    device = torch.device('cuda')
     
-
-    # train train.py 
+    for step, batch in enumerate(data_iter[0]):
+        if step == 1:
+            break
+        input_ids, input_mask, input_type_ids,	label_ids = batch
+        logits = model(input_ids, input_mask, input_type_ids)
        
-    # eval
+    ## eval
     
 
 

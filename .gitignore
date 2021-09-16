@@ -1,5 +1,4 @@
 *.txt
-*.ipynb
 temp.py
 BERT_Base_Uncased
 pr_*
