@@ -47,7 +47,7 @@ class model(NamedTuple):
     # model_name_or_path  : model path
     # num_labels : number of labels
     
-    model_name_or_path: str  = None,
+    model_name_or_path: str  = None
     num_labels: int = 0
     
     @classmethod

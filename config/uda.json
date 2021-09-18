@@ -6,9 +6,9 @@
     "uda_mode": true,    
 
     "max_seq_length": 128,    
-    "train_batch_size": 8,
-    "eval_batch_size": 16,
-    "unsup_ratio": 3,     
+    "train_batch_size": 2,
+    "eval_batch_size": 4,
+    "unsup_ratio": 2,     
 
     "need_prepro": false,
 

@@ -1,6 +1,8 @@
+import logging
+
 from utils import configuration
 from utils.utils import set_seeds
-import trainer
+from trainer import trainer
 from load_data import load_data
 
 import torch.optim as optim
@@ -14,11 +16,14 @@ from transformers import (
 
 
 def main(cfg, model_cfg):    
+    logging.basicConfig(level=logging.INFO)
+    logging.info('RUN main.py')
     cfg = configuration.params.from_json(cfg)
     model_cfg = configuration.model.from_json(model_cfg)
     set_seeds(cfg.seed)
 
     # Load Data & Create Criterion
+    logging.info('Load IMDB data')
     data = load_data(cfg)
     if cfg.uda_mode:
         unsup_criterion = nn.KLDivLoss(reduction='none')
@@ -29,26 +34,21 @@ def main(cfg, model_cfg):
     
     
     # Load model
-    config = AutoConfig.from_pretrained(
-        model_cfg.model_name_or_path,
-        num_labels=model_cfg.num_labels
-    )
-
+    logging.info(f'Load {model_cfg.model_name_or_path} model')
+    config = AutoConfig.from_pretrained(model_cfg.model_name_or_path, num_labels=model_cfg.num_labels)
     model = AutoModelForSequenceClassification.from_config(config=config)
-      
-    ## train train.py 
-    #trainer = trainer.trainer(model, cfg, model_cfg)
 
+    ## train train.py 
+    UDA_trainer = trainer(model, cfg)
+    # could change optimzer
     optimizer = optim.Adam(model.parameters(), lr=cfg.lr)
-    criterion = nn.CrossEntropyLoss()
-    device = torch.device('cuda')
-    
-    for step, batch in enumerate(data_iter[0]):
-        if step == 1:
-            break
-        input_ids, input_mask, input_type_ids,	label_ids = batch
-        logits = model(input_ids, input_mask, input_type_ids)
-       
+    # train cpu mode
+    logging.info('Train start')
+    losses = UDA_trainer.train(data_iter, optimizer, device=torch.device('cpu'))
+    logging.info('well done')
+
+# 
+
     ## eval
     
 
