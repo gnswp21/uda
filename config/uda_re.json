@@ -1,0 +1,26 @@
+{
+    "case" :"01_only_sum",
+    "ratio" : 0.001,
+    "device" : "cuda",
+
+    "seed": 42,
+    "lr": 2e-5,    
+
+    "mode": "train_test",
+    "uda_mode": true,    
+
+    "max_seq_length": 128,    
+    "train_batch_size": 2,
+    "test_batch_size": 8,
+    "unsup_batch_size": 2,
+    
+    "unsup_ratio": 2,
+    "total_steps" : 30,
+
+    "need_prepro": false,
+
+    "sup_data_dir": "data/imdb_sup_train.txt",
+    "unsup_data_dir": "data/imdb_unsup_train.txt",
+    "test_data_dir": "data/imdb_sup_test.txt"
+
+}
