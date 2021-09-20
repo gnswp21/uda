@@ -1,6 +1,4 @@
-
 import pandas as pd
-
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -30,7 +28,6 @@ class IMDB(Dataset):
                                     for c in columns]
             else:
                 raise "d_type error"
-       
 
     def __len__(self):
         return self.tensors[0].size(0)
@@ -43,29 +40,26 @@ class IMDB(Dataset):
 class load_data:
     def __init__(self, cfg):
         self.cfg = cfg
-
         self.dataset = IMDB
+
         if cfg.need_prepro:
             raise NotImplemented
 
-        if cfg.mode == 'train':
-            raise NotImplemented
-        
-        elif cfg.mode == 'train_eval':
+        if 'train' in cfg.mode:
             self.sup_data_dir = cfg.sup_data_dir            
-            self.eval_data_dir = cfg.eval_data_dir
-
             self.sup_batch_size = cfg.train_batch_size
-            self.eval_batch_size = cfg.eval_batch_size
-
             self.shuffle = True
+        
+        elif 'test' in cfg.mode:
+            self.test_data_dir = cfg.test_data_dir
+            self.test_batch_size = cfg.test_batch_size
 
-        elif cfg.mode == 'eval':
+        elif 'eval' in cfg.mode:
             raise NotImplemented
         
         if cfg.uda_mode:
             self.unsup_data_dir = cfg.unsup_data_dir
-            self.unsup_batch_size = cfg.train_batch_size * cfg.unsup_ratio
+            self.unsup_batch_size =cfg.unsup_batch_size
     
     def sup_data_iter(self):
         sup_dataset = self.dataset(self.sup_data_dir, self.cfg.need_prepro, self.cfg.max_seq_length, self.cfg.mode, 'sup')
@@ -79,8 +73,8 @@ class load_data:
         
         return unsup_data_iter
 
-    def eval_data_iter(self):
-        eval_dataset = self.dataset(self.eval_data_dir, self.cfg.need_prepro, self.cfg.max_seq_length, 'eval', 'sup')
-        eval_data_iter = DataLoader(eval_dataset, batch_size=self.eval_batch_size, shuffle=False)
+    def test_data_iter(self):
+        test_dataset = self.dataset(self.test_data_dir, self.cfg.need_prepro, self.cfg.max_seq_length, 'test', 'sup')
+        test_data_iter = DataLoader(test_dataset, batch_size=self.test_batch_size, shuffle=True)
 
-        return eval_data_iter
+        return test_data_iter
