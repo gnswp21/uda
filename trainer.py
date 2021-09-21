@@ -11,6 +11,9 @@ class trainer:
         self.model = model
         self.cfg = cfg
         logging.basicConfig(level=logging.INFO)
+        if self.cfg.uda_mode:
+            self.prev_model = model
+
 
     def train(self, data_iter, optimizer):
         if self.cfg.uda_mode:
@@ -45,11 +48,11 @@ class trainer:
 
                     # inputs에 따른 outputs을 낸다
                     ori_outputs = self.model(ori_input_ids, ori_input_mask, ori_input_type_ids)
+                    #ori_outputs = self.prev_model(ori_input_ids, ori_input_mask, ori_input_type_ids)
                     aug_outputs = self.model(aug_input_ids, aug_input_mask, aug_input_type_ids)
 
                     # make logits LogProbability
-                    ori_logP = LSM(ori_outputs.logits)
-                    aug_logP = LSM(aug_outputs.logits)   
+                    ori_logP, aug_logP = map(LSM, (ori_outputs.logits, aug_outputs.logits))   
 
                     unsup_loss = unsup_criterion(ori_logP, aug_logP)
                     losses['unsup'].append(unsup_loss)
@@ -105,37 +108,39 @@ class trainer:
         total_test_num = 0
 
         self.model.eval()
-        for step, batch in enumerate(sup_test_iter):
-            # end 조건
-            if step > self.cfg.ratio * len(sup_test_iter):
-                break
-
-
-            #  sup data를 device에 담는다.
-            sup_input_ids, sup_input_mask, sup_input_type_ids, label_ids = (t.to(device) for t in batch)
-
-
-
-            # inputs에 따른 outputs을 낸다
-            sup_outputs = self.model(sup_input_ids, sup_input_mask, sup_input_type_ids)
-            predictions = torch.argmax(sup_outputs.logits, dim = 1)
+        with torch.no_grad():
             
-            # for logging
-            current_acc = torch.sum(predictions == label_ids, dim = 0)
-            test_num = len(label_ids)                        
-            total_acc += current_acc
-            total_test_num += test_num
-
-            # logging
-            if step % 10 == 0:
-                logging.info(f'pred : {predictions} labels : {label_ids}')
-                logging.info(f'Currnent test step: {step}/{int(len(sup_test_iter) * self.cfg.ratio)}')
-                logging.info(f'Currnent accuracy : {current_acc/test_num : 6.2f}')
-                logging.info(f'Total accuracy : {total_acc/total_test_num : 6.2f}')
+            for step, batch in enumerate(sup_test_iter):
+                # end 조건
+                if step > self.cfg.ratio * len(sup_test_iter):
+                    break
 
 
-        logging.info('Test end')
-        logging.info(f'Total accuracy : {total_acc/total_test_num : 6.2f}')
+                #  sup data를 device에 담는다.
+                sup_input_ids, sup_input_mask, sup_input_type_ids, label_ids = (t.to(device) for t in batch)
+
+
+
+                # inputs에 따른 outputs을 낸다
+                sup_outputs = self.model(sup_input_ids, sup_input_mask, sup_input_type_ids)
+                predictions = torch.argmax(sup_outputs.logits, dim = 1)
+                
+                # for logging
+                current_acc = torch.sum(predictions == label_ids, dim = 0)
+                test_num = len(label_ids)                        
+                total_acc += current_acc
+                total_test_num += test_num
+
+                # logging
+                if step % 10 == 0:
+                    logging.info(f'pred : {predictions} labels : {label_ids}')
+                    logging.info(f'Currnent test step: {step}/{int(len(sup_test_iter) * self.cfg.ratio)}')
+                    logging.info(f'Currnent accuracy : {current_acc/test_num : 6.2f}')
+                    logging.info(f'Total accuracy : {total_acc/total_test_num : 6.2f}')
+
+
+            logging.info('Test end')
+            logging.info(f'Total accuracy : {total_acc/total_test_num : 6.2f}')
         return total_acc
 
 

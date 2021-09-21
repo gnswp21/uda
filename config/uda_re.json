@@ -10,7 +10,7 @@
     "uda_mode": true,    
 
     "max_seq_length": 128,    
-    "train_batch_size": 2,
+    "train_batch_size": 1,
     "test_batch_size": 8,
     "unsup_batch_size": 2,
     
