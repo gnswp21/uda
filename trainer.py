@@ -47,13 +47,18 @@ class trainer:
                     aug_input_ids, aug_input_mask, aug_input_type_ids = (t.to(device) for t in batch)
 
                     # inputs에 따른 outputs을 낸다
+                    # ori_outputs은 고정된 모델로 할 수 있게끔 수정할 것
                     ori_outputs = self.model(ori_input_ids, ori_input_mask, ori_input_type_ids)
                     #ori_outputs = self.prev_model(ori_input_ids, ori_input_mask, ori_input_type_ids)
                     aug_outputs = self.model(aug_input_ids, aug_input_mask, aug_input_type_ids)
 
-                    # make logits LogProbability
-                    ori_logP, aug_logP = map(LSM, (ori_outputs.logits, aug_outputs.logits))   
+                    # confidence-based masking
+                    use_ids = self.confidence_based_masking(ori_outputs.logits)
 
+                    # make logits LogProbability
+                    # sharpening prediction and masking
+                    ori_logP, aug_logP = self.sharpening_prediction(ori_outputs.logits, log=True), LSM(aug_outputs.logits)
+                    ori_logP, aug_logP = ori_logP[use_ids], aug_logP[use_ids]                    
                     unsup_loss = unsup_criterion(ori_logP, aug_logP)
                     losses['unsup'].append(unsup_loss)
 
@@ -67,7 +72,9 @@ class trainer:
                     losses['sup'].append(sup_loss)
 
                     # 두 종류의 loss를 더 한다.
-                    total_loss = unsup_loss + sup_loss
+                    # cositency_coeff에 따라 조합의 정도가 달라진다.
+                    consistency_coeff = self.cfg.cosistency_coeff
+                    total_loss = sup_loss + consistency_coeff * unsup_loss 
                     losses['total'].append(total_loss)
                     # backpropagation
                     total_loss.backward()
@@ -143,7 +150,24 @@ class trainer:
             logging.info(f'Total accuracy : {total_acc/total_test_num : 6.2f}')
         return total_acc
 
+    def sharpening_prediction(self, i : torch.Tensor, temperature:float = 0.4, log : bool = True):
+        i = i / temperature
+        if log:
+            f = torch.nn.LogSoftmax(dim=1)
+        else:
+            f = torch.nn.Softmax(dim=1)
+        return f(i)
 
+    def confidence_based_masking(self, x: torch.Tensor, beta:float = 0.8):
+        import math
+
+        f = torch.nn.LogSoftmax(dim=1)
+        y = f(x)
+        maxPs, _ = torch.max(y, dim = 1)
+        use_id = torch.nonzero(maxPs > math.log(beta))
+        return use_id
+        
+    
     def make_cycle_iterator(self, iterator):
         cycle_iter = itertools.cycle(iterator)
         return  cycle_iter
@@ -153,6 +177,8 @@ class trainer:
         
     def save(self, path='model/'):
         torch.save(self.model.state_dict(), path + self.cfg.case + '.pt')
+
+    
         
 
     

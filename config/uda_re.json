@@ -6,8 +6,12 @@
     "seed": 42,
     "lr": 2e-5,    
 
-    "mode": "train_test",
-    "uda_mode": true,    
+    "mode": "train",
+    "uda_mode": true,
+    "cosistency_coeff" : 1,
+    "temperature" : 0.4,
+    "beta" : 0.8,
+        
 
     "max_seq_length": 128,    
     "train_batch_size": 1,

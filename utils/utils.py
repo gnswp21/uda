@@ -18,7 +18,7 @@ def save_fig(logs : Dict, path='figure/train_00_only_sum/', save : bool= True):
     import os
 
     logging.basicConfig(level=logging.INFO)
-    logging.info(f'Save logs at {path}')
+    logging.info(f'Save figures at {path}')
     try:
         if not os.path.exists(path):
             os.makedirs(path)

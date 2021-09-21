@@ -28,7 +28,10 @@ class params(NamedTuple):
     lr: int = 2e-5                      # lr_scheduled = lr * factor
    
     mode: str = None                    # train, eval, test
-    uda_mode: bool = False              # True, False
+    uda_mode: bool = False
+    cosistency_coeff : float = 1.0              # True, False
+    temperature : float = 0.4
+    beta : float =  0.8
 
     max_seq_length: int = 128
     train_batch_size: int = 32
