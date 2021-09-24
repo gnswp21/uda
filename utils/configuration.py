@@ -32,6 +32,9 @@ class params(NamedTuple):
     cosistency_coeff : float = 1.0              # True, False
     temperature : float = 0.4
     beta : float =  0.8
+    masking:bool = False
+    prediction:bool = False
+    
 
     max_seq_length: int = 128
     train_batch_size: int = 32

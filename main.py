@@ -69,18 +69,13 @@ def main(cfg, model_cfg):
 
     if 'eval' in cfg.mode:
         pass
+
     if 'test' in cfg.mode:
-        #model_load(model, cfg, path='model/')
-        #UDA_trainer = trainer(model, cfg)
+        model_load(model, cfg, path='model/')
+        UDA_trainer = trainer(model, cfg)
         accuracy = UDA_trainer.test(data_iter)
 
 
-    if 'check' in cfg.mode:
-        #model_load(model, cfg, path='model/')
-        #UDA_trainer = trainer(model, cfg)
-        #print(model == UDA_trainer.model)
-        #print(id(model),id(UDA_trainer.model)
-        pass
 
     # END
     logging.info('Well done')
