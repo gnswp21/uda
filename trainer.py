@@ -53,13 +53,20 @@ class trainer:
                     aug_outputs = self.model(aug_input_ids, aug_input_mask, aug_input_type_ids)
 
                     # confidence-based masking
-                    use_ids = self.confidence_based_masking(ori_outputs.logits)
-
-                    # make logits LogProbability
-                    # sharpening prediction and masking
-                    ori_logP, aug_logP = self.sharpening_prediction(ori_outputs.logits, log=True), LSM(aug_outputs.logits)
-                    ori_logP, aug_logP = ori_logP[use_ids], aug_logP[use_ids]                    
-                    unsup_loss = unsup_criterion(ori_logP, aug_logP)
+                    use_ids, maxPs = self.confidence_based_masking(ori_outputs.logits, beta=self.cfg.beta, use_log=False)
+                    
+                    if use_ids.nelement() == 0:
+                        # 사용할 unsup data가 없는 경우
+                        unsup_loss = 0
+                        logging.info(f'[NO USING UNSUP DATA] Currnent train step: {step}/{int(len(unsup_train_iter) * self.cfg.ratio)}')
+                        logging.info(f'[NO USING UNSUP DATA] ori max Probs: {torch.max(maxPs.data)}')
+                    else:
+                        # make logits LogProbability
+                        # sharpening prediction and masking
+                        ori_logP = self.sharpening_prediction(ori_outputs.logits, temperature=self.cfg.temperature, use_log=True)
+                        aug_logP = LSM(aug_outputs.logits)
+                        ori_logP, aug_logP = ori_logP[use_ids], aug_logP[use_ids]                    
+                        unsup_loss = unsup_criterion(ori_logP, aug_logP)
                     losses['unsup'].append(unsup_loss)
 
                     #  sup data를 device에 담는다.
@@ -99,7 +106,7 @@ class trainer:
         ## Do eval
         pass
 
-    def test(self, data_iter):
+    def test(self, data_iter, show_loss:bool = False):
         ## define metric
         sup_test_iter = data_iter['sup_test']
         
@@ -126,8 +133,6 @@ class trainer:
                 #  sup data를 device에 담는다.
                 sup_input_ids, sup_input_mask, sup_input_type_ids, label_ids = (t.to(device) for t in batch)
 
-
-
                 # inputs에 따른 outputs을 낸다
                 sup_outputs = self.model(sup_input_ids, sup_input_mask, sup_input_type_ids)
                 predictions = torch.argmax(sup_outputs.logits, dim = 1)
@@ -142,30 +147,36 @@ class trainer:
                 if step % 10 == 0:
                     logging.info(f'pred : {predictions} labels : {label_ids}')
                     logging.info(f'Currnent test step: {step}/{int(len(sup_test_iter) * self.cfg.ratio)}')
-                    logging.info(f'Currnent accuracy : {current_acc/test_num : 6.2f}')
-                    logging.info(f'Total accuracy : {total_acc/total_test_num : 6.2f}')
+                    logging.info(f'Currnent accuracy : {current_acc}/{test_num}:{current_acc/test_num : 6.2f}')
+                    logging.info(f'Total accuracy : {total_acc}/{total_test_num}:{total_acc/total_test_num : 6.2f}')
 
 
             logging.info('Test end')
             logging.info(f'Total accuracy : {total_acc/total_test_num : 6.2f}')
         return total_acc
 
-    def sharpening_prediction(self, i : torch.Tensor, temperature:float = 0.4, log : bool = True):
+    def sharpening_prediction(self, i : torch.Tensor, temperature:float = 0.4, use_log:bool = True):
         i = i / temperature
-        if log:
+        if use_log:
             f = torch.nn.LogSoftmax(dim=1)
         else:
             f = torch.nn.Softmax(dim=1)
         return f(i)
 
-    def confidence_based_masking(self, x: torch.Tensor, beta:float = 0.8):
+    def confidence_based_masking(self, x: torch.Tensor, beta:float = 0.8, use_log=True):
         import math
 
-        f = torch.nn.LogSoftmax(dim=1)
-        y = f(x)
-        maxPs, _ = torch.max(y, dim = 1)
-        use_id = torch.nonzero(maxPs > math.log(beta))
-        return use_id
+        if use_log:
+            f = torch.nn.LogSoftmax(dim=1)
+            y = f(x)
+            maxPs, _ = torch.max(y, dim=1)
+            use_id = torch.nonzero(maxPs > math.log(beta))
+        else:
+            f = torch.nn.Softmax(dim=1)
+            y = f(x)
+            maxPs, _ = torch.max(y, dim=1)
+            use_id = torch.nonzero(maxPs > beta)
+        return use_id, maxPs
         
     
     def make_cycle_iterator(self, iterator):

@@ -50,11 +50,11 @@ class load_data:
             self.sup_batch_size = cfg.train_batch_size
             self.shuffle = True
         
-        elif 'test' in cfg.mode:
+        if 'test' in cfg.mode:
             self.test_data_dir = cfg.test_data_dir
             self.test_batch_size = cfg.test_batch_size
 
-        elif 'eval' in cfg.mode:
+        if 'eval' in cfg.mode:
             raise NotImplemented
         
         if cfg.uda_mode:

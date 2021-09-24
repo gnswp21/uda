@@ -2,7 +2,7 @@ import logging
 import matplotlib.pyplot as plt
 
 from utils import configuration
-from utils.utils import set_seeds, save_fig
+from utils.utils import *
 from trainer import trainer
 from load_data import load_data
 
@@ -50,7 +50,7 @@ def main(cfg, model_cfg):
     device = torch.device(cfg.device)
     model.to(device)
 
-    if cfg.mode =='train':
+    if 'train' in cfg.mode:
         ## Set Trainer
         UDA_trainer = trainer(model, cfg)
         # could change optimzer
@@ -61,19 +61,26 @@ def main(cfg, model_cfg):
         # Save model
         model_path = 'model/'
         logging.info(f'Save model at {model_path}{cfg.case}.pt')
-        UDA_trainer.save(path=model_path)
+        model_save(model, cfg=cfg, path=model_path)
         
-        # Save losses figure
-        figure_path = 'figure/' + cfg.case + '/'
-        save_fig(losses, path=figure_path, save=True)
+        ## Save losses figure
+        #figure_path = 'figure/' + cfg.case + '/'
+        #save_fig(losses, path=figure_path, save=True)
 
-    elif cfg.mode =='train_test':
+    if 'eval' in cfg.mode:
         pass
-    elif cfg.mode == 'test':
-        model_name = cfg.case
-        UDA_trainer = trainer(model, cfg)
-        UDA_trainer.load(path='model/'+ model_name +'.pt')
+    if 'test' in cfg.mode:
+        #model_load(model, cfg, path='model/')
+        #UDA_trainer = trainer(model, cfg)
         accuracy = UDA_trainer.test(data_iter)
+
+
+    if 'check' in cfg.mode:
+        #model_load(model, cfg, path='model/')
+        #UDA_trainer = trainer(model, cfg)
+        #print(model == UDA_trainer.model)
+        #print(id(model),id(UDA_trainer.model)
+        pass
 
     # END
     logging.info('Well done')

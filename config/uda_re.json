@@ -1,12 +1,12 @@
 {
-    "case" :"01_only_sum",
-    "ratio" : 0.001,
+    "case" :"06_uda",
+    "ratio" : 1,
     "device" : "cuda",
 
     "seed": 42,
     "lr": 2e-5,    
 
-    "mode": "train",
+    "mode": "train_test",
     "uda_mode": true,
     "cosistency_coeff" : 1,
     "temperature" : 0.4,
@@ -14,9 +14,9 @@
         
 
     "max_seq_length": 128,    
-    "train_batch_size": 1,
-    "test_batch_size": 8,
-    "unsup_batch_size": 2,
+    "train_batch_size": 8,
+    "test_batch_size": 32,
+    "unsup_batch_size": 16,
     
     "unsup_ratio": 2,
     "total_steps" : 30,

@@ -2,3 +2,5 @@
 .pt
 data
 model
+figure/*
+*.pyc

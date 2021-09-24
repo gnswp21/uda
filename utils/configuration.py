@@ -26,7 +26,7 @@ class params(NamedTuple):
     seed: int = 1421
     
     lr: int = 2e-5                      # lr_scheduled = lr * factor
-   
+
     mode: str = None                    # train, eval, test
     uda_mode: bool = False
     cosistency_coeff : float = 1.0              # True, False

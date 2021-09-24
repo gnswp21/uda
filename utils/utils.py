@@ -35,3 +35,10 @@ def save_fig(logs : Dict, path='figure/train_00_only_sum/', save : bool= True):
 
 def save_config(cfg, model_cfg):
     pass
+
+def model_load(model, cfg, path='model/'):
+    model.load_state_dict(torch.load(path+cfg.case+'.pt'))
+        
+def model_save(model, cfg, path='model/'):
+    torch.save(model.state_dict(), path+cfg.case+'.pt')
+
