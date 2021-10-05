@@ -30,10 +30,11 @@ class params(NamedTuple):
     mode: str = None                    # train, eval, test
     uda_mode: bool = False
     cosistency_coeff : float = 1.0              # True, False
-    temperature : float = 0.4
-    beta : float =  0.8
+    
     masking:bool = False
-    prediction:bool = False
+    beta : float =  0.8    
+    sharpening:bool = False
+    temperature : float = 0.4
     
 
     max_seq_length: int = 128

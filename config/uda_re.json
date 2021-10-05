@@ -1,6 +1,6 @@
 {
     "case" :"08_check",
-    "ratio" : 0.001,
+    "ratio" : 0.5,
     "device" : "cuda",
 
     "seed": 42,
@@ -9,8 +9,11 @@
     "mode": "train_test",
     "uda_mode": true,
     "cosistency_coeff" : 1,
-    "temperature" : 0.4,
+
+    "masking" : false,
     "beta" : 0.8,
+    "sharpening" : false,
+    "temperature" : 0.4,
         
 
     "max_seq_length": 128,    
