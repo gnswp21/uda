@@ -1,6 +1,6 @@
 {
-    "case" :"06_uda",
-    "ratio" : 1,
+    "case" :"08_check",
+    "ratio" : 0.001,
     "device" : "cuda",
 
     "seed": 42,

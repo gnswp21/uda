@@ -52,7 +52,6 @@ class trainer:
                     
                     
                     aug_outputs = self.model(aug_input_ids, aug_input_mask, aug_input_type_ids)
-
                     
                     ## Will be implemented
                     ## case 수정해야함
@@ -78,8 +77,6 @@ class trainer:
                         aug_logP = LSM(aug_outputs.logits)
                         unsup_loss = unsup_criterion(ori_logP, aug_logP)
                         losses['unsup'].append(unsup_loss)
-
-
 
                     #  sup data를 device에 담는다.
                     sup_input_ids, sup_input_mask, sup_input_type_ids, label_ids = (t.to(device) for t in next(sup_iter))
