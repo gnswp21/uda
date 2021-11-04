@@ -20,7 +20,6 @@ class params(NamedTuple):
     # for train
     case :str = "train_00"
     ratio : float = 1.0
-    train_steps: int = 30000
     device:'str'='cuda'
     
     # train    
@@ -42,11 +41,12 @@ class params(NamedTuple):
     train_batch_size: int = 32
     test_batch_size: int = 8
     unsup_batch_size: int = 96
-    total_steps: int = 10
 
 
     # unsup
     unsup_ratio: int = 0                # unsup_batch_size = unsup_ratio * sup_batch_size
+    total_steps: int = 20000
+
 
     # data
     need_prepro: bool = False           # is data already preprocessed?

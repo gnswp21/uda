@@ -65,7 +65,7 @@ def main(cfg, model_cfg):
         ## Save losses figure
         figure_path = f'results/{cfg.case}/figure/'
         logging.info(f'Save model at {figure_path}') 
-        save_fig(losses, save=True)
+        save_fig(losses, path=figure_path, save=True)
 
 
     if 'test' in cfg.mode:
