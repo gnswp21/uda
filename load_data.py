@@ -46,9 +46,12 @@ class load_data:
             raise NotImplemented
 
         if 'train' in cfg.mode:
-            self.sup_data_dir = cfg.sup_data_dir            
+            self.sup_data_dir = cfg.sup_data_dir
             self.sup_batch_size = cfg.train_batch_size
             self.shuffle = True
+
+            self.valid_data_dir = cfg.valid_data_dir            
+            self.valid_batch_size = cfg.test_batch_size
         
         if 'test' in cfg.mode:
             self.test_data_dir = cfg.test_data_dir
@@ -72,6 +75,12 @@ class load_data:
         unsup_data_iter = DataLoader(unsup_dataset, batch_size=self.unsup_batch_size, shuffle=self.shuffle)
         
         return unsup_data_iter
+    
+    def valid_data_iter(self):
+        valid_dataset = self.dataset(self.valid_data_dir, self.cfg.need_prepro, self.cfg.max_seq_length, self.cfg.mode, 'sup')
+        valid_data_iter = DataLoader(valid_dataset, batch_size = self.valid_batch_size, shuffle=self.shuffle)
+        
+        return valid_data_iter
 
     def test_data_iter(self):
         test_dataset = self.dataset(self.test_data_dir, self.cfg.need_prepro, self.cfg.max_seq_length, 'test', 'sup')

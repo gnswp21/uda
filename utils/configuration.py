@@ -20,6 +20,7 @@ class params(NamedTuple):
     # for train
     case :str = "train_00"
     ratio : float = 1.0
+    train_steps: int = 30000
     device:'str'='cuda'
     
     # train    
@@ -52,6 +53,7 @@ class params(NamedTuple):
     sup_data_dir: str = None
     unsup_data_dir: str = None
     test_data_dir: str = None
+    valid_data_dir: str = None
 
 
     @classmethod

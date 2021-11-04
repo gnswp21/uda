@@ -36,6 +36,7 @@ def main(cfg, model_cfg):
         if 'train' in cfg.mode:
             data_iter['sup_train'] = data.sup_data_iter()
             data_iter['unsup_train'] = data.unsup_data_iter()
+            data_iter['sup_valid'] = data.valid_data_iter()
         if 'test' in cfg.mode:
             data_iter['sup_test'] = data.test_data_iter()
     else:
@@ -44,39 +45,38 @@ def main(cfg, model_cfg):
     
     # Load model set device
     logging.info(f'Load {model_cfg.model_name_or_path} model')
+    device = torch.device(cfg.device)
     config = AutoConfig.from_pretrained(model_cfg.model_name_or_path, num_labels=model_cfg.num_labels)
     model = AutoModelForSequenceClassification.from_config(config=config)
-    device = torch.device(cfg.device)
     model.to(device)
-
+    
     if 'train' in cfg.mode:
         ## Set Trainer
-        UDA_trainer = trainer(model, cfg)
-        # could change optimzer
         optimizer = optim.Adam(model.parameters(), lr=cfg.lr)
+        UDA_trainer = trainer(model, cfg, optimizer)
         # Train using cuda
-        losses = UDA_trainer.train(data_iter, optimizer)
+        losses = UDA_trainer.train(data_iter)
 
         # Save model
         model_path = 'results/'+cfg.case+'/model/'
         logging.info(f'Save model at {model_path}')
         save_model(model, cfg=cfg, path=model_path)
 
-        
-        
         ## Save losses figure
-        #figure_path = 'results/cfg.case + '/figure/'
-        #logging.info(f'Save model at {figure_path}') 
-        #save_fig(losses, path=figure_path, save=True)
+        figure_path = f'results/{cfg.case}/figure/'
+        logging.info(f'Save model at {figure_path}') 
+        save_fig(losses, save=True)
 
-    if 'eval' in cfg.mode:
-        pass
 
     if 'test' in cfg.mode:
         model_path = 'results/'+cfg.case+'/model/'
         load_model(model, cfg, path=model_path)
-        UDA_trainer = trainer(model, cfg)
+        optimizer = optim.Adam(model.parameters(), lr=cfg.lr)
+        UDA_trainer = trainer(model, cfg, optimizer)
         accuracy = UDA_trainer.test(data_iter)
+        file = 'results/'+cfg.case+'accuracy.txt'
+        with open(file, 'w', encoding='utf-8') as f:
+            f.write(str(accuracy))
 
     # Save cfgs
     cfg_path = 'results/'+cfg.case+'/cfg/'

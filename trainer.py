@@ -1,24 +1,24 @@
-from numpy.lib.function_base import percentile
 import torch.nn as nn
 import itertools
 import logging
 import torch
-import copy
 
 
 class trainer:
-    def __init__(self, model, cfg):
+    def __init__(self, model, cfg, optimizer):
         self.model = model
         self.cfg = cfg
+        self.optimizer = optimizer
 
         logging.basicConfig(level=logging.INFO)
 
-    def train(self, data_iter, optimizer):
+    def train(self, data_iter):
         if self.cfg.uda_mode:
             device = self.cfg.device
             logging.info('Train start')
 
             sup_train_iter, unsup_train_iter = data_iter['sup_train'], data_iter['unsup_train']
+            sup_valid_iter = data_iter['sup_valid']
             
             losses = {'total' : [], 'sup' : [], 'unsup' : []}
             
@@ -28,18 +28,18 @@ class trainer:
             sup_criterion = nn.CrossEntropyLoss(reduction='mean')
 
             # make iter infinite(cycle)
-            sup_iter = self.make_cycle_iterator(sup_train_iter)
+            sup_train_cycleiter = self.make_cycle_iterator(sup_train_iter)
             
-            # 1 epochs
-            epochs = 1
-            self.model.train()
+            # 10 epochs
+            epochs = 10
             for n in range(epochs):
+                # train
                 for step, batch in enumerate(unsup_train_iter):
                     # end 조건
                     if step > self.cfg.ratio * len(unsup_train_iter):
                         break
-
-                    optimizer.zero_grad()
+                    self.model.train()
+                    self.optimizer.zero_grad()
 
                     # unsup data를 device에 담는다
                     ori_input_ids, ori_input_mask, ori_input_type_ids, \
@@ -79,27 +79,43 @@ class trainer:
                         losses['unsup'].append(unsup_loss)
 
                     #  sup data를 device에 담는다.
-                    sup_input_ids, sup_input_mask, sup_input_type_ids, label_ids = (t.to(device) for t in next(sup_iter))
+                    sup_input_ids, sup_input_mask, sup_input_type_ids, label_ids = (t.to(device) for t in next(sup_train_cycleiter))
 
                     # inputs에 따른 outputs을 낸다
                     sup_outputs = self.model(sup_input_ids, sup_input_mask, sup_input_type_ids)
                     sup_loss = sup_criterion(sup_outputs.logits, label_ids)
+                    
                     losses['sup'].append(sup_loss)
 
                     # 두 종류의 loss를 더 한다.
-                    # cositency_coeff에 따라 조합의 정도가 달라진다.
                     loss = sup_loss + self.cfg.cosistency_coeff * unsup_loss 
                     losses['total'].append(loss)
                     # backpropagation
                     loss.backward()
-                    optimizer.step()
+                    self.optimizer.step()
                     
-
                     # logging
-                    if step % 10 == 0:
-                        logging.info(f'Currnent train step: {step}/{int(len(unsup_train_iter) * self.cfg.ratio)}')
+                    if step % 10 == 9:
+                        logging.info(f'Currnent   Step: {step+1}/{len(unsup_train_iter)} of epoch {n+1}/{epochs}')
                         logging.info(f'Currnent total loss :{loss}, sup loss : {sup_loss}, unsup_loss : {unsup_loss}')
+                        pred = torch.argmax(sup_outputs.logits,dim=1)
+                        acc = torch.sum(pred==label_ids)/len(label_ids)
+                        logging.info(f'Currnent   Acc : {acc :.3f}')
 
+                logging.info("Valid START")
+                suc = [0, 0]
+                for step, batch in enumerate(sup_valid_iter):
+                    self.model.eval()
+                    sup_input_ids, sup_input_mask, sup_input_type_ids, label_ids = (t.to(device) for t in batch)
+                    sup_outputs = self.model(sup_input_ids, sup_input_mask, sup_input_type_ids)
+                    v_pred = torch.argmax(sup_outputs.logits,dim=1)
+                    suc[0] += torch.sum(v_pred==label_ids)
+                    suc[1] += len(label_ids)
+                    if step % 4 == 3:
+                        logging.info(f'Currnent   Step: {step+1}/{len(sup_valid_iter)} of epoch {n+1}/{epochs}')
+                        logging.info(f'Valid Current Acc : {torch.sum(v_pred==label_ids)/len(label_ids) :.3f}')
+                logging.info(f'Valid   ToTal Acc : {suc[0]/suc[1] :.3f}')
+                logging.info("Valid END")
             logging.info('Train end')
             
             return losses
@@ -108,10 +124,6 @@ class trainer:
 
     
     
-    def eval(self, data_iter):
-        ## define metric
-        ## Do eval
-        pass
 
     def test(self, data_iter, show_loss:bool = False):
         ## define metric
@@ -186,18 +198,19 @@ class trainer:
         return use_id, maxPs
         
     
+
     def make_cycle_iterator(self, iterator):
         cycle_iter = itertools.cycle(iterator)
         return  cycle_iter
     
-    def load(self, path) :
-        return self.model.load_state_dict(torch.load(path))
-        
-    def save(self, path='model/'):
-        torch.save(self.model.state_dict(), path + self.cfg.case + '.pt')
-
-    
-        
+    def tsa(step, total_step, mode='linear'):
+        if mode=='linear':
+            label_num = 2
+            a = step/total_step
+            tsa_thresh = a * (1-1/label_num) + 1/label_num
+            return tsa_thresh
+        else:
+            return 1
 
     
 

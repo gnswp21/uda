@@ -18,18 +18,19 @@ def save_fig(logs : Dict, path='results/figure/train_00/', save : bool= True):
     import os
 
     logging.basicConfig(level=logging.INFO)
-    logging.info(f'Save figures at {path}')
-    try:
-        if not os.path.exists(path):
-            os.makedirs(path)
-    except OSError:
-        print ('Error: Creating directory. ' +  path)
 
     for key in logs.keys():
         plt.figure()
         plt.plot(logs[key])
         if save:
+            logging.info(f'Save figures at {path}')
+            try:
+                if not os.path.exists(path):
+                    os.makedirs(path)
+            except OSError:
+                print ('Error: Creating directory. ' +  path)
             plt.savefig(path + key + '.png', dpi=3000)
+            
         else:
             plt.show()
 
