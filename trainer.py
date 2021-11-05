@@ -41,7 +41,20 @@ class trainer:
                 self.model.train()
                 self.optimizer.zero_grad()
             
-                unsup_loss = 0
+                
+                # unsup data를 device에 담는다
+                ori_input_ids, ori_input_mask, ori_input_type_ids, \
+                aug_input_ids, aug_input_mask, aug_input_type_ids = (t.to(device) for t in next(unsup_cycleiter))
+
+                # inputs에 따른 outputs을 낸다
+                # using previous model with 고정된 parameters
+                with torch.no_grad():
+                    aug_outputs = self.model(aug_input_ids, aug_input_mask, aug_input_type_ids)
+                ori_outputs = self.model(ori_input_ids, ori_input_mask, ori_input_type_ids)
+                
+                ori_logP = LSM(ori_outputs.logits)
+                aug_logP = LSM(aug_outputs.logits)
+                unsup_loss = unsup_criterion(ori_logP, aug_logP)
                 losses['unsup'].append(unsup_loss)
 
                 ## supervised learning
